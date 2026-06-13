@@ -1,0 +1,36 @@
+name: Decode gfwlist
+
+on:
+  # 1. 定时触发：在北京时间每周一早上8点自动运行
+  schedule:
+    - cron: '0 0 * * 0'
+  # 2. 手动触发：你也可以在 GitHub 网页上点击按钮手动运行
+  workflow_dispatch:
+
+jobs:
+  decode:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 这是运行代码的工作目录，先清空它
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 下载原始的 gf wlist.txt 文件
+      - name: Download gfwlist.txt
+        run: |
+          curl -L -o gfwlist.txt \
+          https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt
+
+      # 3. 将 Base64 编码的文件解码成普通文本
+      - name: Decode the file
+        run: |
+          # 官方使用的是URL安全的Base64格式，需要先做字符替换
+          # 再将解码后的内容保存到 gfwlist_decoded.txt 文件
+          sed 's/-/+/g; s/_/\//g' gfwlist.txt | base64 -d > gfwlist_decoded.txt
+
+      # 4. 上传解码后的文件，方便你下载
+      - name: Upload decoded file
+        uses: actions/upload-artifact@v4
+        with:
+          name: decoded-gfwlist
+          path: gfwlist_decoded.txt
